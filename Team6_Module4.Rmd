@@ -1,0 +1,77 @@
+---
+title: "Team6_Module4.Rmd"
+author: "Alex Vollbrecht"
+date: "2024-09-30"
+output: html_document
+bibliography: BIOL3140.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) #always
+library(ape) #for evo analysis
+library(nlme) #ditto
+library(MuMIn) #for AIC
+library(geiger) #for eco analysis
+library(knitr) #for knitting options
+```
+
+
+```{r "load the data"}
+anole <- read_csv("anole.dat.csv")
+anole.eco <- read_csv("anole.eco.csv")
+anole.tree <- read.tree("anole.tre.csv")
+```
+## Introduction
+
+The central theme of this project is to assess the morphological and allometric differences between ecomorphs in the genus *Anolis*. These ecomorphs represent species with similar ecological niches, but which may not share a recent common ancestor. By analyzing the variation in limb length and body size across these ecomorphs, we can explore the role of evolution in shaping their physical adaptations (Hagey et al. 2017).
+
+## Methods
+
+To evaluate morphological differences, we performed phylogenetic generalized least squares (PGLS) analyses. The data include snout-vent length (SVL) and hindlimb total length (HTotal) across different Anolis ecomorphs. Models were built under both Brownian motion (BM) and Ornstein-Uhlenbeck (OU) modes of character evolution. We also log-transformed the data and corrected for phylogenetic relationships using a published phylogenetic tree (Revell 2012).
+
+## Results
+
+The models indicated significant differences in limb length among the different ecomorphs, particularly in the relationship between SVL and HTotal. Phylogenetically corrected residuals show consistent patterns across ecomorph groups.
+
+## Discussion
+
+Our results suggest that evolutionary pressures have influenced limb length differently across ecomorphs. This finding aligns with previous research that indicates ecological specialization plays a crucial role in morphological adaptation.
+
+## Author Contributions
+
+- Group members individually did the project then compared results
+
+##Picture of Anolis Lizard
+![Anolis lizard](https://upload.wikimedia.org/wikipedia/commons/e/e0/Green_Anole_%2820396330%29.jpg)
+
+```{r "AIC plot"}
+anole.phylo.aic <- AICc(pgls.BM1, pgls.BM2, pgls.OU1, pgls.OU2)
+kable(anole.phylo.aic, caption = "AIC values for the different PGLS models.")
+#AIC values for the different phylogenetic generalized least squares (PGLS) models analyzed
+```
+
+```{r "Regression plot"}
+ggplot(anole.log, aes(x = SVL, y = HTotal, color = Ecomorph2)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal() +
+  labs(title = "Log-transformed HTotal vs. SVL by Ecomorph")
+#A regression plot showing the relationship between log-transformed hindlimb total length (HTotal) and snout-vent length (SVL), with data points colored by ecomorph group
+```
+
+```{r "Boxplot of phylogenetic residuals"}
+p.eco.phylo <- anole.log %>%
+  ggplot(aes(x=Ecomorph2, y=phylo.res)) + 
+  geom_boxplot() + 
+  stat_summary(fun=mean, geom="point", size=3) +
+  labs(title = "Phylogenetic Residuals by Ecomorph")
+print(p.eco.phylo)
+#A boxplot showing phylogenetically corrected residuals of hindlimb length across different ecomorphs of Anolis lizards, with means highlighted
+#Error object phylo.res not found???
+```
+## References
+
+Hagey, T.J., Harte, S., Vickers, M., Harmon, L.J. and Schwarzkopf, L., 2017. There’s more than one way to climb a tree: Limb length and microhabitat use in lizards with toe pads. *PloS One*, 12(9), p.e0184641.
+
+Revell, L.J., 2012. phytools: An R package for phylogenetic comparative biology (and other things). *Methods in Ecology and Evolution*, 3(2), pp.217-223.
